@@ -3,7 +3,7 @@ class Agent:
     agentCount = 0
 
     def __init__(self, cash=1000, stocks=0):
-        self.ID = agentCount # agent id unique to each agent.
+        self.ID = Agent.agentCount # agent id unique to each agent.
         self.cash = cash
         self.stocks = stocks
         self.transaction = []
@@ -22,12 +22,12 @@ class Agent:
     
     def buy_All(self, buying_price):
         """ Model for Buying stocks at the given buying price. """
-        stocks_No = self.cash / self.buying_price
+        stocks_No = self.cash / buying_price
         self.stocks = self.stocks + stocks_No
         self.cash = 0
         self.transaction.append(-self.cash)
     
-    def displayTransiction():
+    def displayTransiction(self):
         """ Display all the transactions made by the agent """
         print("The list of transiction done by agentId: {} is: {}".format(self.ID, self.transaction))
 
