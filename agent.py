@@ -1,12 +1,16 @@
+
 class Agent:
     """ Base class for all Agent class """
     agentCount = 0
 
-    def __init__(self, cash=1000, stocks=0):
+    def __init__(self,indicators,cash=1000, stocks=0,no_pridictionModel = 10):
         self.ID = Agent.agentCount # agent id unique to each agent.
         self.cash = cash
         self.stocks = stocks
+        self.indicators = indicators # define at the time of creation.
         self.transaction = []
+        self.pridiction_model = []
+        self.no_pridictionModel = no_pridictionModel
         Agent.agentCount += 1
     
     def displayCount(self):
@@ -31,6 +35,12 @@ class Agent:
         """ Display all the transactions made by the agent """
         print("The list of transiction done by agentId: {} is: {}".format(self.ID, self.transaction))
 
+    def define_pridiction_model(self, model_list):
+        if len(model_list)>no_pridictionModel:
+            raise ValueError("More models then configuration per agent.")
+        if type(model_list) == list():
+            raise TypeError("Model list is not list")
+        self.pridiction_model = model_list
 
     
 
