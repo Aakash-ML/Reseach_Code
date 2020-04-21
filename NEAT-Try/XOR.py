@@ -4,6 +4,9 @@
 
 from __future__ import print_function
 import neat
+import random
+
+random.seed(1234)
 
 # 2-input XOR inputs and expected outputs.
 xor_inputs = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0)]
@@ -16,13 +19,14 @@ def eval_genomes(genomes, config):
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         for xi, xo in zip(xor_inputs, xor_outputs):
             output = net.activate(xi)
+            # this checks the squared error between the output and input
             genome.fitness -= (output[0] - xo[0]) ** 2
 
 
 # Load configuration.
 config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                      neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                     './NEAT-Try/XOR-conf')
+                     './temp.conf')
 
 # Create the population, which is the top-level object for a NEAT run.
 p = neat.Population(config)
@@ -31,7 +35,7 @@ p = neat.Population(config)
 p.add_reporter(neat.StdOutReporter(False))
 
 # Run until a solution is found.
-winner = p.run(eval_genomes, n=4)
+winner = p.run(eval_genomes, n=6)
 
 # Display the winning genome.
 print('\nBest genome:\n{!s}'.format(winner))
