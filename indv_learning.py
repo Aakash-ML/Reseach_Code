@@ -5,6 +5,7 @@ This is the main evalutaion algorithm for research.
 __author__ = "Aakash Patel"
 __version__ = "0.1.0"
 __license__ = "MIT"
+import sys
 import math
 import os
 import neat
@@ -158,8 +159,8 @@ def indv_lear(agent_list):
 
 #step 3> The agent then trades using the winner model obtained in step 2, for 1 month or 21 trading days, 
 def trade_with_model(agent):
-    inputs = input_for_training(agent.indicators) # take it from inputs_file
-    outputs = output_for_training()
+    inputs = input_for_test(agent.indicators) # take it from inputs_file
+    outputs = output_for_test()
     winner_net = neat.nn.FeedForwardNetwork.create(agent.pridiction_model, agent.model_Config)
     money = agent.cash
     stocks = agent.stocks
@@ -224,7 +225,7 @@ def main():
         inv = Agent()
         agent_list.append(inv)
     
-    for _ in range(5):
+    for _ in range(6):
         # step 1:- get technical indicators
         agent_list = select_indicators(agent_list)
         #step 2:- get the perfect neural network model
@@ -238,10 +239,15 @@ def main():
         #step5> again the process from step 1 to step 4 is repeated for 6 months.
         global Today 
         Today = Today + days
+        ## create seek
+        seek = (100/6)*i
+        row = "="*int(seek) + ">"
+        sys.stdout.write("\r %d%% %s " %(seek , row))
+        sys.stdout.flush()
     
-    pprint(tecnical_indicator_score)
+    pprint(tecnical_indicator_score) 
     # saving the agentdata for further analysis
-    with open('agent_data.pkl','wb') as f:
+    with open('agent_data_1mon.pkl','wb') as f:
         pickle.dump(agent_list,f)
 
 
