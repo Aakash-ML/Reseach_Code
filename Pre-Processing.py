@@ -127,5 +127,18 @@ pprint(df.columns)
 # total values in the data frame
 pprint(df.shape)
 
+# Normalize every colum
+def normalize(df):
+    result = df.copy()
+    for feature_name in df.columns[1:]:
+        max_value = df[feature_name].max()
+        min_value = df[feature_name].min()
+        result[feature_name] = (df[feature_name] - min_value) / (max_value - min_value)
+    return result
+normalize_df = normalize(df)
+normalize_df['Open_new'] = df['Open']
+pprint(normalize_df.head())
+pprint(normalize_df.columns)
 # write it to a file
-df.to_csv('GA_Data_with_TI.csv',index = False)
+#df.to_csv('GA_Data_with_TI.csv',index = False)
+normalize_df.to_csv('GA_Data_with_TI_Normalized.csv',index = False)

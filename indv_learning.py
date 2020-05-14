@@ -14,13 +14,14 @@ from agent import Agent
 import configparser
 from pprint import pprint
 import pandas as pd
+import pickle
 
 
 # config
 # global variables
-No_of_Agents = 2
+No_of_Agents = 50
 Shift_data_by = 5
-Maximum_Generations = 150
+Maximum_Generations = 250
 # Number of days used for training
 num_to_train = 15
 # 
@@ -28,7 +29,7 @@ Today = 20
 # trade for days
 days = 21
 tecnical_indicator_score = {i : 0 for i in range(1,15)}
-df = pd.read_csv("GA_Data_with_TI.csv")
+df = pd.read_csv("GA_Data_with_TI_Normalized.csv")
 print("Data loaded !!")
 pprint(df.head())
 pprint(df.columns)
@@ -68,20 +69,20 @@ def input_for_test(indicators):
 def output_for_training():
     """Return list contating the tuple of required inputs"""
     # indicators = [i+Shift_data_by for i in indicators]
-    sub_data = df.iloc[Today-num_to_train+1:Today+1,1]
+    sub_data = df.iloc[Today-num_to_train+1:Today+1,20]
     #pprint(sub_data.values)
     return sub_data.values
 
 def output_for_test():
     """Return list contating the tuple of required inputs"""
     # indicators = [i+Shift_data_by for i in indicators]
-    sub_data = df.iloc[Today+1:Today+1+days,1]
+    sub_data = df.iloc[Today+1:Today+1+days,20]
     #pprint(sub_data.values)
     return sub_data.values
 
 def eval_genomes(genomes, config):
     """
-    Edit this function baased on ROI
+    To evaluate each model on the baises on ROI
     """
     tempConfig = configparser.ConfigParser()
     tempConfig.read('temp.conf')
@@ -137,12 +138,14 @@ def select_indicators(agent_list):
     for agent in agent_list:
         agent.indicators = random.sample(range(1,15),random.randint(0,len(tecnical_indicator_score)))
         agent.indicators = [i+Shift_data_by for i in agent.indicators]
-        agent.indicators.extend([1,4])
+        agent.indicators.extend([1,2,3,4])
     return agent_list
 
 #step2> each agent then uses NEAT to get the perfect neural network model 
 # to trade with the selected technical indicators from step 1. [To get the model from neat we use 
-# past 15 days data and we try to predict the Buy or Sell action rather than the price of the stock, fitness will be calculated based on the ROI for each gene, also the termination will be 150 generations, i.e after 150 generations we take the best-performing individual as winner model for the agent]
+# past 15 days data and we try to predict the Buy or Sell action rather than the price of the stock,
+#  fitness will be calculated based on the ROI for each gene, also the termination will be 150 generations,
+#  i.e after 150 generations we take the best-performing individual as winner model for the agent]
 def indv_lear(agent_list):
     for agent in agent_list:
         create_config(agent.indicators)
@@ -179,25 +182,34 @@ def trade_with_model(agent):
     print('*'*20)
     return agent  
 
-#Step 4> now after 21 trading days the ROI is calculated for each agent and ranked accordingly, and the technical indicators used by them have also scored accordingly.
+def norm_dic(dic_data):
+    max_val = max(dic_data.values())
+    min_val = min(dic_data.values())
+    for k in dic_data:
+        dic_data[k] = (dic_data[k] - min_val) / (max_val - min_val)
+    return dic_data
+#Step 4> now after 21 trading days the ROI is calculated for each agent and ranked accordingly,
+#  and the technical indicators used by them have also scored accordingly.
 def score_TI(agent_list):
     agent_score = {}
     # get roi per agent
     for i,agent in enumerate(agent_list):
         agent_score[i] = agent.ROI[-1]
     # normalize the roi
-    factor=1.0/sum(agent_score.values())
-    for k in agent_score:
-        agent_score[k] = agent_score[k]*factor
+    agent_score = norm_dic(agent_score)
+    # factor=1.0/sum(agent_score.values())
+    # for k in agent_score:
+    #     agent_score[k] = agent_score[k]*factor
     # adding the values to the ti score
     global tecnical_indicator_score
     for i in agent_score:
-        ind = [a-Shift_data_by for a in agent_list[i].indicators if a not in [1,4]]
+        ind = [a-Shift_data_by for a in agent_list[i].indicators if a not in [1,2,3,4]]
         for b in ind:
             tecnical_indicator_score[b] += agent_score[i]
-    fac = 1.0/sum(tecnical_indicator_score.values())
-    for key in tecnical_indicator_score:
-        tecnical_indicator_score[key] = tecnical_indicator_score[key]*fac   
+    # fac = 1.0/sum(tecnical_indicator_score.values())
+    # for key in tecnical_indicator_score:
+    #     tecnical_indicator_score[key] = tecnical_indicator_score[key]*fac
+    tecnical_indicator_score = norm_dic(tecnical_indicator_score) 
 
 #step5> again the process from step 1 to step 4 is repeated for 6 months.
 
@@ -212,7 +224,7 @@ def main():
         inv = Agent()
         agent_list.append(inv)
     
-    for _ in range(3):
+    for _ in range(5):
         # step 1:- get technical indicators
         agent_list = select_indicators(agent_list)
         #step 2:- get the perfect neural network model
@@ -221,14 +233,16 @@ def main():
         for agent in agent_list:
             agent = trade_with_model(agent)
         # step 4:- Update the Technical indicator based on the roi of last 21 days
-        # This steps helps to collectively learn the best
+        # This steps helps to collectively learn the best TI
         score_TI(agent_list)
         #step5> again the process from step 1 to step 4 is repeated for 6 months.
         global Today 
         Today = Today + days
     
     pprint(tecnical_indicator_score)
-
+    # saving the agentdata for further analysis
+    with open('agent_data.pkl','wb') as f:
+        pickle.dump(agent_list,f)
 
 
 
