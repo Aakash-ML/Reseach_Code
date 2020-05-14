@@ -1,5 +1,7 @@
 from agent import Agent
 import pickle
+import matplotlib as plt
+
 
 with open('agent_data.pkl', 'rb') as f:
     agent_list = pickle.load(f)
